@@ -327,19 +327,23 @@ def delete_draft(media_id):
 @cli.command('serve')
 @click.argument('file', type=click.Path(exists=True))
 @click.option('-p', '--port', default=8080, help='服务器端口（默认 8080）')
+@click.option('--host', default='0.0.0.0', help='绑定地址（默认 0.0.0.0，允许所有接口访问）')
 @click.option('--theme', default='default', help='使用主题')
 @click.option('--open', 'auto_open', is_flag=True, help='自动打开浏览器（服务器环境无效）')
-def serve_file(file, port, theme, auto_open):
+def serve_file(file, port, host, theme, auto_open):
     """
     启动临时 HTTP 服务器预览 Markdown 文件
     
-    适用于服务器环境，生成 URL 链接可在浏览器中打开
+    适用于服务器环境，生成 URL 链接可在浏览器中打开。
+    注意：默认绑定 0.0.0.0 允许所有网络接口访问，但需要确保
+    防火墙/安全组已开放相应端口，且服务器有公网 IP。
     
     FILE: Markdown 文件路径
     
     示例:
         wechat-publisher serve article.md
         wechat-publisher serve article.md --port 8888 --theme tech
+        wechat-publisher serve article.md --host 127.0.0.1  # 仅本地访问
     """
     try:
         from http.server import HTTPServer, SimpleHTTPRequestHandler
@@ -347,6 +351,7 @@ def serve_file(file, port, theme, auto_open):
         import threading
         import tempfile
         import webbrowser
+        import urllib.request
         
         md_path = Path(file)
         click.echo(f"\n[INFO] 正在准备预览: {md_path}")
@@ -366,7 +371,7 @@ def serve_file(file, port, theme, auto_open):
         temp_dir = tempfile.mkdtemp(prefix='wechat_mp_')
         temp_html = Path(temp_dir) / 'index.html'
         temp_html.write_text(html_content, encoding='utf-8')
-        click.echo(f"[FILE] 临时文件已创建: {temp_html}")
+        click.echo(f"[FILE] 临时文件已创建")
         
         # 4. 启动 HTTP 服务器
         class Handler(SimpleHTTPRequestHandler):
@@ -384,10 +389,13 @@ def serve_file(file, port, theme, auto_open):
         
         for attempt in range(max_attempts):
             try:
-                httpd = HTTPServer(('', current_port), Handler)
+                httpd = HTTPServer((host, current_port), Handler)
                 break
-            except OSError:
-                current_port += 1
+            except OSError as e:
+                if "Address already in use" in str(e):
+                    current_port += 1
+                else:
+                    raise
         
         if httpd is None:
             click.echo(f"[ERROR] 无法找到可用端口（尝试范围: {port}-{current_port}）", err=True)
@@ -396,14 +404,39 @@ def serve_file(file, port, theme, auto_open):
         # 获取服务器 URL
         import socket
         hostname = socket.gethostname()
-        local_ip = socket.gethostbyname(hostname)
+        try:
+            local_ip = socket.gethostbyname(hostname)
+        except:
+            local_ip = "127.0.0.1"
+        
+        # 尝试获取公网 IP
+        public_ip = None
+        try:
+            public_ip = urllib.request.urlopen('https://api.ipify.org', timeout=3).read().decode('utf-8')
+        except:
+            pass
         
         click.echo("\n" + "="*60)
         click.echo("[OK] HTTP 服务器已启动!")
         click.echo("="*60)
         click.echo()
         click.echo(f"本地访问: http://localhost:{current_port}")
-        click.echo(f"网络访问: http://{local_ip}:{current_port}")
+        click.echo(f"内网访问: http://{local_ip}:{current_port}")
+        
+        if public_ip and public_ip != local_ip:
+            click.echo(f"公网访问: http://{public_ip}:{current_port}")
+            click.echo()
+            click.echo("[WARN] 公网访问需要确保:")
+            click.echo("  1. 防火墙/安全组已开放端口")
+            click.echo("  2. 云服务商安全组已放行")
+        else:
+            click.echo()
+            click.echo("[WARN] 无法获取公网 IP，可能的原因:")
+            click.echo("  1. 服务器在内网/无公网 IP")
+            click.echo("  2. 需要使用内网穿透工具（如 ngrok）")
+            click.echo()
+            click.echo("[TIP] 推荐使用 'copy' 命令生成独立 HTML 文件:")
+            click.echo(f"  wechat-publisher copy {file}")
         click.echo()
         click.echo("提示:")
         click.echo("  - 在飞书或其他平台中可以直接访问上述链接")
