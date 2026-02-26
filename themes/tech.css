@@ -1,0 +1,186 @@
+/*
+ * 技术主题 - 代码高亮优化
+ * 适合技术文章、教程、文档
+ */
+
+.mp-article {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    color: #2c3e50;
+    max-width: 100%;
+}
+
+/* 标题样式 - 科技感 */
+.mp-article h1 {
+    font-size: 26px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 28px 0 18px;
+    padding-bottom: 10px;
+    border-bottom: 3px solid #3498db;
+}
+
+.mp-article h2 {
+    font-size: 22px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 24px 0 14px;
+    padding: 8px 0 8px 16px;
+    border-left: 5px solid #3498db;
+    background: linear-gradient(to right, #ecf0f1, transparent);
+}
+
+.mp-article h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #34495e;
+    margin: 18px 0 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px dashed #bdc3c7;
+}
+
+.mp-article h4,
+.mp-article h5,
+.mp-article h6 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #7f8c8d;
+    margin: 14px 0 8px;
+}
+
+/* 段落 */
+.mp-article p {
+    margin: 14px 0;
+    text-align: justify;
+    line-height: 1.7;
+}
+
+/* 引用块 - 提示框风格 */
+.mp-article blockquote {
+    margin: 16px 0;
+    padding: 12px 16px;
+    background: #e8f4f8;
+    border-left: 4px solid #3498db;
+    color: #2c3e50;
+    border-radius: 0 4px 4px 0;
+}
+
+.mp-article blockquote p {
+    margin: 0;
+}
+
+/* 代码块 - 深色主题 */
+.mp-article pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 16px;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-family: "Fira Code", "Consolas", "Monaco", "Courier New", monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    margin: 16px 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.mp-article code {
+    background: #f4f4f4;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: "Fira Code", "Consolas", "Monaco", "Courier New", monospace;
+    font-size: 13px;
+    color: #e74c3c;
+}
+
+.mp-article pre code {
+    background: transparent;
+    padding: 0;
+    color: inherit;
+}
+
+/* 列表 */
+.mp-article ul,
+.mp-article ol {
+    margin: 14px 0;
+    padding-left: 24px;
+}
+
+.mp-article li {
+    margin: 6px 0;
+    line-height: 1.6;
+}
+
+/* 图片 */
+.mp-article img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 16px auto;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* 表格 */
+.mp-article table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 13px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.mp-article th {
+    background: #3498db;
+    color: white;
+    border: 1px solid #2980b9;
+    padding: 10px;
+    text-align: left;
+    font-weight: 600;
+}
+
+.mp-article td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+}
+
+.mp-article tr:nth-child(even) {
+    background: #f8f9fa;
+}
+
+/* 链接 */
+.mp-article a {
+    color: #3498db;
+    text-decoration: none;
+    border-bottom: 1px dotted #3498db;
+}
+
+.mp-article a:hover {
+    color: #2980b9;
+    border-bottom: 1px solid #2980b9;
+}
+
+/* 分隔线 */
+.mp-article hr {
+    border: none;
+    border-top: 2px dashed #ddd;
+    margin: 28px 0;
+}
+
+/* 强调 */
+.mp-article strong {
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.mp-article em {
+    font-style: italic;
+    color: #555;
+}
+
+/* 删除线 */
+.mp-article del {
+    text-decoration: line-through;
+    color: #95a5a6;
+}
