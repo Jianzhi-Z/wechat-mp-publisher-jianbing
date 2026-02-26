@@ -22,12 +22,13 @@ Markdown → HTML + CSS → 微信草稿箱
   表格转换    批量转换
 ```
 
-### 两种使用模式
+### 三种使用模式
 
 | 模式 | 命令 | 适用场景 |
 |------|------|---------|
 | API 发布 | `convert --draft` | 认证服务号 |
-| GUI 复制 | `preview-gui` | 所有公众号（推荐未认证号） |
+| GUI 复制 | `preview-gui` | 有图形界面的环境 |
+| 服务器复制 | `copy` / `serve` | OpenClaw/服务器环境 |
 
 ## Agent 常用命令
 
@@ -50,6 +51,24 @@ wechat-publisher convert articles/*.md --preview --output-dir output/
 # 打开 GUI 窗口（适合未认证公众号）
 wechat-publisher preview-gui article.md --theme tech
 ```
+
+### 服务器环境（OpenClaw/无 GUI）
+
+```bash
+# 方式 1：生成可复制的内容（推荐）
+wechat-publisher copy article.md --theme tech
+
+# 方式 2：启动 HTTP 服务器
+wechat-publisher serve article.md --port 8080
+
+# 方式 3：生成独立 HTML
+wechat-publisher convert article.md --base64 --preview
+```
+
+**特点：**
+- `copy`：生成 Base64 嵌入的独立 HTML，可复制到剪贴板
+- `serve`：启动临时 HTTP 服务器，提供访问链接
+- `--base64`：`convert` 选项，生成独立 HTML 文件
 
 ### 主题管理
 
