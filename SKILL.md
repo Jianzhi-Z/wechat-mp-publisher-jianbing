@@ -154,6 +154,26 @@ wechat-publisher preview-gui article.md --no-convert-images
 - 直接粘贴到公众号编辑器
 - 图片自动转为 Base64 格式
 
+**注意：** GUI 需要图形界面。服务器环境请使用以下命令。
+
+### 服务器环境使用（OpenClaw/飞书）
+
+```bash
+# 方式 1：生成可复制的内容（推荐）
+wechat-publisher copy article.md --theme tech
+
+# 方式 2：启动 HTTP 服务器
+wechat-publisher serve article.md --port 8080
+
+# 方式 3：生成独立 HTML
+wechat-publisher convert article.md --base64 --preview
+```
+
+**服务器环境特点：**
+- 无图形界面依赖
+- 生成 Base64 嵌入的独立 HTML
+- 可复制到任何平台
+
 ### 主题管理
 
 ```bash
