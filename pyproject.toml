@@ -1,0 +1,76 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wechat-mp-publisher"
+version = "1.1.0"
+description = "将 Markdown 文章转换并发布到微信公众号草稿箱，支持批量处理、图片压缩和 GUI 预览"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [
+    {name = "OpenClaw Community"}
+]
+keywords = ["wechat", "markdown", "publisher", "cli", "openclaw"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Content Creators",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Utilities",
+    "Topic :: Text Processing :: Markup",
+]
+dependencies = [
+    "markdown>=3.4.0",
+    "beautifulsoup4>=4.11.0",
+    "pygments>=2.13.0",
+    "requests>=2.28.0",
+    "click>=8.0.0",
+    "pyyaml>=6.0",
+    "pillow>=9.0.0",
+    "pywebview>=4.0",
+    "pyperclip>=1.8",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=22.0.0",
+    "flake8>=5.0.0",
+]
+
+[project.scripts]
+wechat-publisher = "src.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/yourname/wechat-mp-publisher"
+Documentation = "https://github.com/yourname/wechat-mp-publisher#readme"
+Repository = "https://github.com/yourname/wechat-mp-publisher.git"
+Issues = "https://github.com/yourname/wechat-mp-publisher/issues"
+
+[tool.setuptools]
+packages = ["src"]
+include-package-data = true
+
+[tool.setuptools.package-data]
+"*" = ["*.css", "*.html", "*.yaml", "*.json", "*.md"]
+
+[tool.black]
+line-length = 100
+target-version = ['py38']
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"

@@ -1,0 +1,19 @@
+# 包含 README 和 LICENSE
+include README.md
+include LICENSE
+include SKILL.md
+include requirements.txt
+
+# 包含主题 CSS 文件
+recursive-include themes *.css
+
+# 包含示例文件
+recursive-include examples *.md
+
+# 包含测试数据
+recursive-include tests *.py *.md
+
+# 排除缓存文件
+global-exclude __pycache__
+global-exclude *.py[co]
+global-exclude .DS_Store
