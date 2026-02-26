@@ -61,9 +61,10 @@ def _get_markdown_files(paths: list) -> list:
 @click.option('--fans-comment', is_flag=True, help='仅粉丝可评论')
 @click.option('--upload-images/--no-upload-images', default=True, help='是否上传图片')
 @click.option('--compress/--no-compress', default=True, help='是否自动压缩过大的图片（默认开启）')
+@click.option('--base64', 'use_base64', is_flag=True, help='将图片转为 Base64 嵌入 HTML（生成独立 HTML 文件）')
 @click.option('--batch', is_flag=True, help='强制批量模式（即使只有一个文件）')
 def convert(paths, title, author, cover, draft, preview, output, output_dir, theme, 
-            digest, source_url, comment, fans_comment, upload_images, compress, batch):
+            digest, source_url, comment, fans_comment, upload_images, compress, use_base64, batch):
     """
     转换 Markdown 文件为微信公众号格式
     
@@ -150,8 +151,15 @@ def convert(paths, title, author, cover, draft, preview, output, output_dir, the
                 except Exception as e:
                     click.echo(f"   [WARN]  图片处理失败: {e}", err=True)
             
-            # 5. 保存预览文件
-            if preview or (is_batch and output_dir):
+            # 5. 处理 Base64 图片转换（生成独立 HTML）
+            if use_base64:
+                from src.image_utils import convert_images_to_base64
+                click.echo("[BASE64] 正在将图片转换为 Base64...")
+                html_content = convert_images_to_base64(html_content, str(md_path.parent))
+                click.echo("   ✓ 图片已嵌入 HTML")
+            
+            # 6. 保存预览文件
+            if preview or (is_batch and output_dir) or use_base64:
                 if is_batch and output_dir:
                     # 批量模式：使用输出目录
                     out_dir = Path(output_dir)
@@ -162,7 +170,12 @@ def convert(paths, title, author, cover, draft, preview, output, output_dir, the
                     output_path = Path(output) if output else Path(f"{md_path.stem}.html")
                 
                 output_path.write_text(html_content, encoding='utf-8')
-                click.echo(f"💾 预览文件已保存: {output_path}")
+                click.echo(f"[OK] HTML 文件已保存: {output_path}")
+                
+                # 如果是 Base64 模式，显示文件大小
+                if use_base64:
+                    file_size = output_path.stat().st_size
+                    click.echo(f"   文件大小: {file_size / 1024:.1f} KB")
             
             # 6. 发布到微信草稿箱
             if draft:
@@ -308,6 +321,111 @@ def delete_draft(media_id):
             
     except WeChatAPIError as e:
         click.echo(f"[ERROR] 微信 API 错误: {e}", err=True)
+        sys.exit(1)
+
+
+@cli.command('serve')
+@click.argument('file', type=click.Path(exists=True))
+@click.option('-p', '--port', default=8080, help='服务器端口（默认 8080）')
+@click.option('--theme', default='default', help='使用主题')
+@click.option('--open', 'auto_open', is_flag=True, help='自动打开浏览器（服务器环境无效）')
+def serve_file(file, port, theme, auto_open):
+    """
+    启动临时 HTTP 服务器预览 Markdown 文件
+    
+    适用于服务器环境，生成 URL 链接可在浏览器中打开
+    
+    FILE: Markdown 文件路径
+    
+    示例:
+        wechat-publisher serve article.md
+        wechat-publisher serve article.md --port 8888 --theme tech
+    """
+    try:
+        from http.server import HTTPServer, SimpleHTTPRequestHandler
+        import socketserver
+        import threading
+        import tempfile
+        import webbrowser
+        
+        md_path = Path(file)
+        click.echo(f"\n[INFO] 正在准备预览: {md_path}")
+        
+        # 1. 转换 Markdown
+        click.echo(f"[THEME] 使用主题: {theme}")
+        converter = MarkdownConverter(theme=theme)
+        html_content = converter.convert_file(str(md_path), title=md_path.stem)
+        
+        # 2. 将图片转为 Base64（确保独立性）
+        from src.image_utils import convert_images_to_base64
+        click.echo("[BASE64] 正在处理图片...")
+        html_content = convert_images_to_base64(html_content, str(md_path.parent))
+        click.echo("   ✓ 图片已嵌入")
+        
+        # 3. 创建临时目录和文件
+        temp_dir = tempfile.mkdtemp(prefix='wechat_mp_')
+        temp_html = Path(temp_dir) / 'index.html'
+        temp_html.write_text(html_content, encoding='utf-8')
+        click.echo(f"[FILE] 临时文件已创建: {temp_html}")
+        
+        # 4. 启动 HTTP 服务器
+        class Handler(SimpleHTTPRequestHandler):
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, directory=temp_dir, **kwargs)
+            
+            def log_message(self, format, *args):
+                # 简化日志输出
+                pass
+        
+        # 尝试启动服务器，如果端口被占用则尝试其他端口
+        max_attempts = 10
+        current_port = port
+        httpd = None
+        
+        for attempt in range(max_attempts):
+            try:
+                httpd = HTTPServer(('', current_port), Handler)
+                break
+            except OSError:
+                current_port += 1
+        
+        if httpd is None:
+            click.echo(f"[ERROR] 无法找到可用端口（尝试范围: {port}-{current_port}）", err=True)
+            sys.exit(1)
+        
+        # 获取服务器 URL
+        import socket
+        hostname = socket.gethostname()
+        local_ip = socket.gethostbyname(hostname)
+        
+        click.echo("\n" + "="*60)
+        click.echo("[OK] HTTP 服务器已启动!")
+        click.echo("="*60)
+        click.echo()
+        click.echo(f"本地访问: http://localhost:{current_port}")
+        click.echo(f"网络访问: http://{local_ip}:{current_port}")
+        click.echo()
+        click.echo("提示:")
+        click.echo("  - 在飞书或其他平台中可以直接访问上述链接")
+        click.echo("  - 按 Ctrl+C 停止服务器")
+        click.echo("="*60)
+        
+        # 尝试自动打开浏览器（仅在非服务器环境有效）
+        if auto_open:
+            try:
+                webbrowser.open(f'http://localhost:{current_port}')
+            except:
+                pass
+        
+        # 启动服务器
+        try:
+            httpd.serve_forever()
+        except KeyboardInterrupt:
+            click.echo("\n[INFO] 服务器已停止")
+            httpd.shutdown()
+            
+    except Exception as e:
+        click.echo(f"[ERROR] 错误: {e}", err=True)
         sys.exit(1)
 
 
@@ -770,6 +888,69 @@ def edit_theme(name):
         
     except Exception as e:
         click.echo(f"[ERROR] 保存失败: {e}", err=True)
+        sys.exit(1)
+
+
+@cli.command('copy')
+@click.argument('file', type=click.Path(exists=True))
+@click.option('--theme', default='default', help='使用主题')
+@click.option('-o', '--output', type=click.Path(), help='输出 HTML 文件路径')
+@click.option('--no-clipboard', is_flag=True, help='不尝试复制到剪贴板')
+def copy_article(file, theme, output, no_clipboard):
+    """
+    生成可复制的内容（适合服务器环境）
+    
+    将 Markdown 转换为带 Base64 图片的完整 HTML，可直接复制使用
+    
+    FILE: Markdown 文件路径
+    
+    示例:
+        wechat-publisher copy article.md
+        wechat-publisher copy article.md --theme tech -o output.html
+    """
+    try:
+        md_path = Path(file)
+        click.echo(f"\n[INFO] 正在处理: {md_path}")
+        
+        # 1. 转换 Markdown
+        click.echo(f"[THEME] 使用主题: {theme}")
+        converter = MarkdownConverter(theme=theme)
+        html_content = converter.convert_file(str(md_path), title=md_path.stem)
+        
+        # 2. 将图片转为 Base64
+        from src.image_utils import convert_images_to_base64
+        click.echo("[BASE64] 正在处理图片...")
+        html_content = convert_images_to_base64(html_content, str(md_path.parent))
+        click.echo("   ✓ 图片已嵌入 HTML")
+        
+        # 3. 保存 HTML 文件
+        output_path = Path(output) if output else Path(f"{md_path.stem}_copy.html")
+        output_path.write_text(html_content, encoding='utf-8')
+        
+        file_size = output_path.stat().st_size
+        click.echo(f"[OK] HTML 文件已保存: {output_path}")
+        click.echo(f"   文件大小: {file_size / 1024:.1f} KB")
+        
+        # 4. 尝试复制到剪贴板（如果环境支持）
+        if not no_clipboard:
+            try:
+                import pyperclip
+                pyperclip.copy(html_content)
+                click.echo("[OK] 内容已复制到剪贴板")
+                click.echo("   提示: 可以直接粘贴到公众号编辑器")
+            except Exception as e:
+                click.echo(f"[WARN] 无法复制到剪贴板: {e}")
+                click.echo("   提示: HTML 文件已保存，请手动打开并复制")
+        
+        click.echo("\n" + "="*60)
+        click.echo("使用建议:")
+        click.echo("  1. 在飞书: 可以直接发送 HTML 文件")
+        click.echo("  2. 在公众号: 用浏览器打开 HTML 文件，全选复制")
+        click.echo("  3. 其他平台: 使用生成的 HTML 文件内容")
+        click.echo("="*60)
+        
+    except Exception as e:
+        click.echo(f"[ERROR] 错误: {e}", err=True)
         sys.exit(1)
 
 
