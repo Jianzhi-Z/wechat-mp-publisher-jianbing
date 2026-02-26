@@ -202,6 +202,102 @@ wechat-publisher convert my-blog/ --draft
 
 ---
 
+## 服务器环境使用（OpenClaw/飞书）
+
+在服务器环境（无图形界面）中，无法使用 GUI 预览功能。可以使用以下替代方案：
+
+### 方式 1：生成可复制的内容（推荐）
+
+```bash
+# 生成带 Base64 图片的独立 HTML 文件
+wechat-publisher copy article.md
+
+# 使用特定主题
+wechat-publisher copy article.md --theme tech
+
+# 指定输出文件
+wechat-publisher copy article.md -o output.html
+```
+
+输出示例：
+
+```
+[INFO] 正在处理: article.md
+[THEME] 使用主题: default
+[BASE64] 正在处理图片...
+   ✓ 图片已嵌入 HTML
+[OK] HTML 文件已保存: article_copy.html
+   文件大小: 245.6 KB
+
+============================================================
+使用建议:
+  1. 在飞书: 可以直接发送 HTML 文件
+  2. 在公众号: 用浏览器打开 HTML 文件，全选复制
+  3. 其他平台: 使用生成的 HTML 文件内容
+============================================================
+```
+
+**特点：**
+- 图片已转为 Base64 嵌入 HTML，无需外部文件
+- 单个文件即可完整展示
+- 可直接在浏览器打开，全选复制到公众号编辑器
+- 适合飞书、钉钉等平台分享
+
+### 方式 2：启动 HTTP 服务器
+
+```bash
+# 启动临时 HTTP 服务器（默认端口 8080）
+wechat-publisher serve article.md
+
+# 指定端口
+wechat-publisher serve article.md --port 8888
+
+# 使用特定主题
+wechat-publisher serve article.md --theme tech --port 8888
+```
+
+输出示例：
+
+```
+============================================================
+[OK] HTTP 服务器已启动!
+============================================================
+
+本地访问: http://localhost:8080
+网络访问: http://192.168.1.100:8080
+
+提示:
+  - 在飞书或其他平台中可以直接访问上述链接
+  - 按 Ctrl+C 停止服务器
+============================================================
+```
+
+**使用场景：**
+- 需要在飞书/钉钉等平台分享预览链接
+- 团队成员需要在线查看
+- 需要临时展示给其他人
+
+**注意事项：**
+- 服务器需要开放相应端口
+- 链接仅在服务器运行期间有效
+- 按 Ctrl+C 停止服务器
+
+### 方式 3：生成独立 HTML 文件
+
+```bash
+# 生成带 Base64 图片的独立 HTML
+wechat-publisher convert article.md --base64 --preview
+
+# 指定输出文件
+wechat-publisher convert article.md --base64 -o article.html
+```
+
+与 `copy` 命令的区别：
+- `convert --base64`：仅生成文件，不尝试复制到剪贴板
+- `copy`：生成文件并尝试复制到剪贴板（如果环境支持）
+
+---
+
 ## 主题使用
 
 ### 列出所有主题
