@@ -231,6 +231,9 @@ wechat-publisher serve article.md --port 8888
 
 # 使用特定主题
 wechat-publisher serve article.md --theme tech --port 8888
+
+# 仅允许本地访问（更安全）
+wechat-publisher serve article.md --host 127.0.0.1
 ```
 
 输出示例：
@@ -241,18 +244,43 @@ wechat-publisher serve article.md --theme tech --port 8888
 ============================================================
 
 本地访问: http://localhost:8080
-网络访问: http://192.168.1.100:8080
+内网访问: http://192.168.1.100:8080
+公网访问: http://203.0.113.1:8080
 
-提示:
-  - 在飞书或其他平台中可以直接访问上述链接
-  - 按 Ctrl+C 停止服务器
+[WARN] 公网访问需要确保:
+  1. 防火墙/安全组已开放端口
+  2. 云服务商安全组已放行
 ============================================================
+```
+
+**⚠️ 重要提示：**
+
+默认显示的内网 IP（如 192.168.x.x）通常**无法从外部访问**，除非：
+1. 服务器有公网 IP
+2. 防火墙/安全组已开放相应端口
+3. 云服务商安全组已放行
+
+**如果无法访问，推荐使用 `copy` 命令：**
+```bash
+wechat-publisher copy article.md --theme tech
+# 下载生成的 HTML 文件使用
 ```
 
 **适用场景：**
 - 需要在飞书/钉钉等平台分享预览链接
 - 团队成员需要在线查看
 - 需要临时展示给其他人
+
+**内网穿透方案（无公网 IP）：**
+```bash
+# 方式 1：使用 ngrok
+wechat-publisher serve article.md --port 8080
+# 另开终端：ngrok http 8080
+
+# 方式 2：使用 Cloudflare Tunnel
+wechat-publisher serve article.md --port 8080
+# 另开终端：cloudflared tunnel --url http://localhost:8080
+```
 
 ### 方式 3：生成独立 HTML 文件
 
