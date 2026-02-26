@@ -71,6 +71,9 @@ examples/
 - ✅ API 错误重试（指数退避）
 - ✅ 完整日志系统
 - ✅ 本地主题支持
+- ✅ `copy` 命令（服务器环境生成可复制内容）
+- ✅ `serve` 命令（启动临时 HTTP 服务器）
+- ✅ `--base64` 选项（生成独立 HTML）
 
 ### 原有功能
 - ✅ Markdown → HTML 转换
@@ -141,8 +144,13 @@ wechat-publisher convert article.md --theme tech --preview
 wechat-publisher convert articles/*.md --preview
 wechat-publisher convert articles/ --output-dir output/
 
-# GUI 预览（适合未认证订阅号）
+# GUI 预览（适合未认证订阅号，需要图形界面）
 wechat-publisher preview-gui article.md --theme tech
+
+# 服务器环境使用（OpenClaw/无 GUI）
+wechat-publisher copy article.md --theme tech          # 生成可复制内容
+wechat-publisher serve article.md --port 8080        # 启动 HTTP 服务器
+wechat-publisher convert article.md --base64 --preview  # 生成独立 HTML
 
 # 主题管理
 wechat-publisher theme list
